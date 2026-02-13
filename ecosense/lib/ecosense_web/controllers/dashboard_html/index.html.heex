@@ -1,0 +1,203 @@
+<div class="min-h-screen bg-base-200">
+  <div class="navbar bg-base-100 shadow-lg">
+    <div class="flex-1">
+      <a href={~p"/"} class="btn btn-ghost text-xl">Ecosense</a>
+      <span class="text-base-content/70 ml-2">Dashboard</span>
+    </div>
+  </div>
+
+  <main class="container mx-auto px-4 py-6 max-w-7xl">
+    <div class="flex flex-wrap items-center gap-4 mb-6">
+      <label class="form-control w-full max-w-xs">
+        <span class="label-text font-medium">Nodo</span>
+        <select id="node-select" class="select select-bordered w-full" data-initial-node-id={@node_id}>
+          <option value="">Selecciona un nodo</option>
+        </select>
+      </label>
+      <div class="badge badge-lg badge-ghost" id="node-status"></div>
+      <div class="text-sm text-base-content/60" id="last-update"></div>
+    </div>
+
+    <div id="charts-container" class="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
+      <%!-- Los gráficos se insertan aquí por JS --%>
+    </div>
+
+    <div id="empty-state" class="hidden text-center py-16 text-base-content/60">
+      <p class="text-lg">Selecciona un nodo para ver los sensores y las lecturas en tiempo real.</p>
+    </div>
+
+    <div id="loading-state" class="hidden text-center py-16">
+      <span class="loading loading-spinner loading-lg"></span>
+      <p class="mt-2">Cargando datos...</p>
+    </div>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+(function() {
+  const POLL_INTERVAL_MS = 5000;
+  let chartInstances = [];
+  let pollTimer = null;
+
+  const nodeSelect = document.getElementById("node-select");
+  const chartsContainer = document.getElementById("charts-container");
+  const emptyState = document.getElementById("empty-state");
+  const loadingState = document.getElementById("loading-state");
+  const nodeStatusEl = document.getElementById("node-status");
+  const lastUpdateEl = document.getElementById("last-update");
+
+  function showEmpty() {
+    chartsContainer.classList.add("hidden");
+    loadingState.classList.add("hidden");
+    emptyState.classList.remove("hidden");
+  }
+
+  function showLoading() {
+    emptyState.classList.add("hidden");
+    chartsContainer.classList.add("hidden");
+    loadingState.classList.remove("hidden");
+  }
+
+  function showCharts() {
+    loadingState.classList.add("hidden");
+    emptyState.classList.add("hidden");
+    chartsContainer.classList.remove("hidden");
+  }
+
+  function setNodeStatus(node) {
+    if (!node) return;
+    const status = node.status || "offline";
+    nodeStatusEl.textContent = status;
+    nodeStatusEl.className = "badge badge-lg " + (
+      status === "online" ? "badge-success" :
+      status === "maintenance" ? "badge-warning" : "badge-ghost"
+    );
+  }
+
+  function setLastUpdate() {
+    lastUpdateEl.textContent = "Última actualización: " + new Date().toLocaleTimeString("es");
+  }
+
+  function destroyCharts() {
+    chartInstances.forEach(c => c.destroy());
+    chartInstances = [];
+  }
+
+  function buildCharts(data) {
+    destroyCharts();
+    chartsContainer.innerHTML = "";
+    const { node, sensors, readings } = data;
+    if (!sensors || sensors.length === 0) {
+      chartsContainer.innerHTML = "<p class=\"col-span-full text-center text-base-content/60\">No hay sensores en este nodo.</p>";
+      showCharts();
+      return;
+    }
+
+    const readingsBySensor = {};
+    sensors.forEach(s => { readingsBySensor[s.id] = []; });
+    (readings || []).forEach(r => {
+      const sid = r.sensor_id;
+      if (readingsBySensor[sid]) readingsBySensor[sid].push(r);
+    });
+
+    sensors.forEach(s => {
+      const list = (readingsBySensor[s.id] || []).slice().reverse();
+      const labels = list.map(r => r.timestamp ? r.timestamp.replace("Z", "").slice(11, 19) : "");
+      const values = list.map(r => Number(r.value));
+
+      const canvas = document.createElement("canvas");
+      canvas.id = "chart-" + s.id;
+      canvas.height = 200;
+      const wrap = document.createElement("div");
+      wrap.className = "bg-base-100 rounded-lg shadow-md p-4";
+      wrap.appendChild(canvas);
+      chartsContainer.appendChild(wrap);
+
+      const ctx = canvas.getContext("2d");
+      const unit = s.unit || "";
+      const chart = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels,
+          datasets: [{
+            label: (s.type || "Sensor") + " " + (unit ? "(" + unit + ")" : ""),
+            data: values,
+            borderColor: "rgb(59, 130, 246)",
+            backgroundColor: "rgba(59, 130, 246, 0.1)",
+            fill: true,
+            tension: 0.2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          animation: false,
+          transitions: { active: { animation: { duration: 0 } } },
+          plugins: { legend: { display: true } },
+          scales: {
+            y: { beginAtZero: false }
+          }
+        }
+      });
+      chartInstances.push(chart);
+    });
+    showCharts();
+  }
+
+  async function loadNodes() {
+    try {
+      const res = await fetch("/api/nodes");
+      const nodes = await res.json();
+      nodeSelect.innerHTML = "<option value=\"\">Selecciona un nodo</option>" +
+        nodes.map(n => "<option value=\"" + n.id + "\">" + (n.name || "Nodo " + n.id) + "</option>").join("");
+      const initial = nodeSelect.getAttribute("data-initial-node-id");
+      if (initial) nodeSelect.value = initial;
+    } catch (e) {
+      console.error("Error loading nodes", e);
+    }
+  }
+
+  async function fetchDashboard(nodeId) {
+    const res = await fetch("/api/dashboard?node_id=" + encodeURIComponent(nodeId));
+    if (!res.ok) throw new Error(res.statusText);
+    return res.json();
+  }
+
+  async function onNodeChange() {
+    const nodeId = nodeSelect.value;
+    if (!nodeId) {
+      showEmpty();
+      destroyCharts();
+      if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+      return;
+    }
+    showLoading();
+    try {
+      const data = await fetchDashboard(nodeId);
+      setNodeStatus(data.node);
+      setLastUpdate();
+      buildCharts(data);
+      if (pollTimer) clearInterval(pollTimer);
+      pollTimer = setInterval(async () => {
+        if (!nodeSelect.value) return;
+        try {
+          const data = await fetchDashboard(nodeSelect.value);
+          setNodeStatus(data.node);
+          setLastUpdate();
+          buildCharts(data);
+        } catch (e) { console.error("Poll error", e); }
+      }, POLL_INTERVAL_MS);
+    } catch (e) {
+      console.error("Dashboard error", e);
+      showEmpty();
+    }
+  }
+
+  nodeSelect.addEventListener("change", onNodeChange);
+  loadNodes().then(() => {
+    if (nodeSelect.value) onNodeChange();
+    else showEmpty();
+  });
+})();
+</script>

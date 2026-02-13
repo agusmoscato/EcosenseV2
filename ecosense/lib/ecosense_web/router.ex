@@ -18,10 +18,14 @@ defmodule EcosenseWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :home
+    get "/dashboard", DashboardController, :index
+    get "/dashboard/:node_id", DashboardController, :show
   end
+
   scope "/api", EcosenseWeb do
     pipe_through :api
 
+    get "/dashboard", DashboardApiController, :show
     resources "/readings", ReadingController, except: [:new, :edit]
     resources "/sensors", SensorController, only: [:index, :create, :delete]
     resources "/nodes", NodeController, only: [:index, :create, :delete]
