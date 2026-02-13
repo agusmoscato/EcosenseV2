@@ -1,5 +1,32 @@
 import Config
 
+# Cargar .env del proyecto (misma idea que el otro EcoSense: pegas DATABASE_URL y listo)
+# .env debe estar en la carpeta donde está mix.exs (ecosense/). Ejecuta mix phx.server desde ecosense/
+# El archivo .env está en .gitignore; no subas contraseñas.
+env_file = Path.join(File.cwd!(), ".env")
+env_map =
+  if File.exists?(env_file) do
+    env_file
+    |> File.read!()
+    |> String.split("\n", trim: true)
+    |> Enum.reduce(%{}, fn line, acc ->
+      line = String.trim(line)
+      if line == "" or String.starts_with?(line, "#") do
+        acc
+      else
+        case String.split(line, "=", parts: 2) do
+          [key, value] -> Map.put(acc, String.trim(key), String.trim(value) |> String.trim_leading("\"") |> String.trim_trailing("\""))
+          _ -> acc
+        end
+      end
+    end)
+  else
+    %{}
+  end
+
+# Helper: leer variable de entorno o del .env cargado
+get_env = fn key, default -> System.get_env(key) || Map.get(env_map, key) || default end
+
 # Enable Phoenix server if PHX_SERVER is set
 if System.get_env("PHX_SERVER") do
   config :ecosense, EcosenseWeb.Endpoint, server: true
@@ -7,42 +34,51 @@ end
 
 # HTTP config (dev + prod)
 config :ecosense, EcosenseWeb.Endpoint,
-  http: [port: String.to_integer(System.get_env("PORT") || "4000")]
+  http: [port: String.to_integer(get_env.("PORT", "4000"))]
 
 # =========================
-# DATABASE CONFIG (DEV / DOCKER)
+# BASE DE DATOS: solo Hostinger (DATABASE_URL en .env o variable de entorno)
+# Sin DATABASE_URL la app no arranca.
+# Formato: ecto://USER:PASSWORD@HOST:PUERTO/NOMBRE_BD  (mysql:// también vale)
 # =========================
-if config_env() != :prod do
-  config :ecosense, Ecosense.Repo,
-    adapter: Ecto.Adapters.MyXQL,
-    username: System.get_env("DB_USER") || "ecosense",
-    password: System.get_env("DB_PASSWORD") || "ecosense",
-    database: System.get_env("DB_NAME") || "ecosense_dev",
-    hostname: System.get_env("DB_HOST") || "db",
-    port: 3306,
-    pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10")
+raw_db_url = get_env.("DATABASE_URL", "")
+db_url =
+  if raw_db_url != "" do
+    String.replace(raw_db_url, "mysql://", "ecto://")
+  else
+    nil
+  end
+
+if !db_url do
+  raise """
+  DATABASE_URL es obligatoria. Configura la base de datos de Hostinger.
+
+  1) Crea un archivo .env en la carpeta del proyecto (donde está mix.exs) con:
+     DATABASE_URL=mysql://usuario:password@host/nombre_bd
+     POOL_SIZE=5
+
+  2) Arranca desde esa carpeta: mix phx.server
+
+  O define la variable antes de arrancar:
+     $env:DATABASE_URL="mysql://..."; mix phx.server
+  """
 end
 
+pool_size = String.to_integer(get_env.("POOL_SIZE", "5"))
+config :ecosense, Ecosense.Repo,
+  url: db_url,
+  pool_size: pool_size,
+  timeout: 90_000,
+  connect_timeout: 30_000,
+  handshake_timeout: 30_000,
+  queue_target: 10_000,
+  queue_interval: 2_000,
+  ssl: false
+
 # =========================
-# DATABASE CONFIG (PROD)
+# PROD: exige SECRET_KEY_BASE
 # =========================
 if config_env() == :prod do
-  database_url =
-    System.get_env("DATABASE_URL") ||
-      raise """
-      environment variable DATABASE_URL is missing.
-      For example: ecto://USER:PASS@HOST/DATABASE
-      """
-
-  maybe_ipv6 =
-    if System.get_env("ECTO_IPV6") in ~w(true 1),
-      do: [:inet6],
-      else: []
-
-  config :ecosense, Ecosense.Repo,
-    url: database_url,
-    pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
-    socket_options: maybe_ipv6
 
   secret_key_base =
     System.get_env("SECRET_KEY_BASE") ||

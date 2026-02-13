@@ -35,3 +35,7 @@ ecosense-*.tar
 npm-debug.log
 /assets/node_modules/
 
+# Variables de entorno con datos sensibles (ver .env.example como plantilla)
+.env
+.env.local
+

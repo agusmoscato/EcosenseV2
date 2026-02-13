@@ -1,17 +1,6 @@
 import Config
 
-# Configure your database
-config :ecosense, Ecosense.Repo,
-  username: "ecosense",
-  password: "ecosense",
-  hostname: "db",
-  database: "ecosense_dev",
-  port: 3306,
-  stacktrace: true,
-  show_sensitive_data_on_connection_error: true,
-  pool_size: 10
-
-
+# La base de datos se configura solo en config/runtime.exs (Hostinger vía DATABASE_URL en .env)
 
 # For development, we disable any cache and enable
 # debugging and code reloading.
@@ -23,7 +12,10 @@ config :ecosense, EcosenseWeb.Endpoint,
   # Bind to 0.0.0.0 to expose the server to the docker host machine.
   # This makes make the service accessible from any network interface.
   # Change to `ip: {127, 0, 0, 1}` to allow access only from the server machine.
-  http: [ip: {0, 0, 0, 0}],
+  http: [
+    ip: {0, 0, 0, 0},
+    thousand_island_options: [read_timeout: 120_000]
+  ],
   check_origin: false,
   code_reloader: true,
   debug_errors: true,
@@ -95,16 +87,6 @@ config :phoenix_live_view,
 # Disable swoosh api client as it is only required for production adapters.
 config :swoosh, :api_client, false
 
-# Configure your database
-config :ecosense, Ecosense.Repo,
-  adapter: Ecto.Adapters.MyXQL,
-  username: "ecosense",
-  password: "ecosense",
-  database: "ecosense_dev",
-  hostname: "db",
-  port: 3306,
-  pool_size: 10
-
 # For development, we disable any cache and enable
 # debugging and code reloading.
 #
@@ -115,7 +97,10 @@ config :ecosense, EcosenseWeb.Endpoint,
   # Bind to 0.0.0.0 to expose the server to the docker host machine.
   # This makes make the service accessible from any network interface.
   # Change to `ip: {127, 0, 0, 1}` to allow access only from the server machine.
-  http: [ip: {0, 0, 0, 0}],
+  http: [
+    ip: {0, 0, 0, 0},
+    thousand_island_options: [read_timeout: 120_000]
+  ],
   check_origin: false,
   code_reloader: true,
   debug_errors: true,

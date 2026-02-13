@@ -10,7 +10,8 @@ defmodule Ecosense.MixProject do
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps(),
-      compilers: Mix.compilers()
+      compilers: Mix.compilers(),
+      listeners: [Phoenix.CodeReloader]
     ]
   end
 
@@ -55,7 +56,10 @@ defmodule Ecosense.MixProject do
     # 🔴 ESTAS 3 FALTABAN
     {:esbuild, "~> 0.9", runtime: Mix.env() == :dev},
     {:tailwind, "~> 0.2", runtime: Mix.env() == :dev},
-    {:phoenix_live_reload, "~> 1.5", only: :dev}
+    {:phoenix_live_reload, "~> 1.5", only: :dev},
+
+    # Heroicons para el plugin de Tailwind (solo carpeta optimized; no es app Elixir)
+    {:heroicons, github: "tailwindlabs/heroicons", tag: "v2.2.0", sparse: "optimized", app: false}
   ]
 end
 
