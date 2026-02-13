@@ -23,6 +23,7 @@ defmodule EcosenseWeb.Router do
     pipe_through :api
 
     resources "/readings", ReadingController, except: [:new, :edit]
+    resources "/sensors", SensorController, only: [:index, :create, :delete]
   end
 
 
