@@ -24,6 +24,7 @@ defmodule EcosenseWeb.Router do
 
     resources "/readings", ReadingController, except: [:new, :edit]
     resources "/sensors", SensorController, only: [:index, :create, :delete]
+    resources "/nodes", NodeController, only: [:index, :create, :delete]
   end
 
 
