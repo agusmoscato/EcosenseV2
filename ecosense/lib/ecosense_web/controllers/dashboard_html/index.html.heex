@@ -1,203 +1,217 @@
-<div class="min-h-screen bg-base-200">
-  <div class="navbar bg-base-100 shadow-lg">
-    <div class="flex-1">
-      <a href={~p"/"} class="btn btn-ghost text-xl">Ecosense</a>
-      <span class="text-base-content/70 ml-2">Dashboard</span>
+<div style="font-family: Inter, -apple-system, BlinkMacSystemFont, sans-serif; min-height:100vh; background:linear-gradient(135deg,#f0f4f8,#ffffff,#e8eef4);">
+
+  <!-- NAVBAR -->
+  <div style="
+    backdrop-filter: blur(20px);
+    background: rgba(255,255,255,0.85);
+    padding:18px 40px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    border-bottom:1px solid rgba(0,0,0,0.05);
+    position:sticky;
+    top:0;
+    z-index:100;
+  ">
+    <h1 style="font-size:22px; font-weight:700; color:#00796b; display:flex; align-items:center; gap:6px;">
+      📊 ECOSENSE <span style="font-size:14px; font-weight:500; color:#555;">DASHBOARD</span>
+    </h1>
+    <div style="display:flex; gap:12px;">
+      <a href={~p"/manage"} style="padding:6px 14px; border-radius:12px; background:#e0f7fa; color:#00796b; font-weight:600; text-decoration:none;">⚙️ Gestionar</a>
+      <a href={~p"/"} style="padding:6px 14px; border-radius:12px; background:#e0f7fa; color:#00796b; font-weight:600; text-decoration:none;">🏠 Home</a>
     </div>
   </div>
 
-  <main class="container mx-auto px-4 py-6 max-w-7xl">
-    <div class="flex flex-wrap items-center gap-4 mb-6">
-      <label class="form-control w-full max-w-xs">
-        <span class="label-text font-medium">Nodo</span>
-        <select id="node-select" class="select select-bordered w-full" data-initial-node-id={@node_id}>
-          <option value="">Selecciona un nodo</option>
-        </select>
-      </label>
-      <div class="badge badge-lg badge-ghost" id="node-status"></div>
-      <div class="text-sm text-base-content/60" id="last-update"></div>
+  <!-- MAIN CONTENT -->
+  <div style="max-width:1000px; margin:auto; padding:60px 20px;">
+
+    <!-- NODE SELECTION & STATUS -->
+    <div style="background:white; border-radius:24px; box-shadow:0 25px 60px rgba(0,0,0,0.08); overflow:hidden; margin-bottom:40px;">
+      <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:24px; padding:24px; color:black;">
+        <div style="flex:1; min-width:200px;">
+          <label style="font-weight:700; font-size:16px; color:#00796b;">Selecciona un Nodo</label>
+          <select id="node-select" style="margin-top:6px; padding:10px 14px; border-radius:12px; border:1px solid #ccc; width:100%; font-size:14px;">
+            <option value="">-- Elige un nodo --</option>
+          </select>
+        </div>
+
+        <div id="node-status-card" style="display:none; flex-direction:column; align-items:center; gap:6px; padding:16px 24px; background:#e0f7fa; border-radius:16px;">
+          <span id="node-status-badge" style="padding:6px 12px; border-radius:12px; font-weight:600;"></span>
+          <p id="last-update" style="font-size:12px; color:#555;"></p>
+        </div>
+
+        <div id="node-info-card" style="display:none; gap:16px;">
+          <div style="text-align:center; padding:16px 24px; border-radius:16px; background:#e0f7fa; border:1px solid #cbd5e1;">
+            <p style="font-size:10px; font-weight:700; text-transform:uppercase; color:#555; margin-bottom:4px;">Sensores</p>
+            <p id="sensor-count" style="font-size:28px; font-weight:700; color:#00796b;">0</p>
+          </div>
+          <div style="text-align:center; padding:16px 24px; border-radius:16px; background:#e0f7fa; border:1px solid #cbd5e1;">
+            <p style="font-size:10px; font-weight:700; text-transform:uppercase; color:#555; margin-bottom:4px;">Lecturas</p>
+            <p id="reading-count" style="font-size:28px; font-weight:700; color:#00796b;">0</p>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div id="charts-container" class="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
-      <%!-- Los gráficos se insertan aquí por JS --%>
+    <!-- EMPTY STATE -->
+    <div id="empty-state" style="text-align:center; padding:60px 20px; color:#555;">
+      <h3 style="font-size:22px; font-weight:600; margin-bottom:12px;">Selecciona un Nodo</h3>
+      <p style="margin-bottom:16px;">Elige un nodo para ver los gráficos en tiempo real de sus sensores.</p>
+      <a href={~p"/manage/nodes"} style="padding:10px 20px; border-radius:16px; background:linear-gradient(90deg,#00796b,#26c6da); color:white; font-weight:600; text-decoration:none;">➕ Crear Primer Nodo</a>
     </div>
 
-    <div id="empty-state" class="hidden text-center py-16 text-base-content/60">
-      <p class="text-lg">Selecciona un nodo para ver los sensores y las lecturas en tiempo real.</p>
+    <!-- LOADING STATE -->
+    <div id="loading-state" style="display:none; text-align:center; padding:60px 20px;">
+      <span style="width:48px; height:48px; border:4px solid #cbd5e1; border-top-color:#00796b; border-radius:50%; display:inline-block; animation:spin 1s linear infinite;"></span>
+      <p style="margin-top:16px; color:#555; font-weight:600;">Cargando datos en tiempo real...</p>
     </div>
 
-    <div id="loading-state" class="hidden text-center py-16">
-      <span class="loading loading-spinner loading-lg"></span>
-      <p class="mt-2">Cargando datos...</p>
+    <!-- CHARTS CONTAINER -->
+    <div id="charts-container" style="display:none; display:grid; gap:24px; grid-template-columns:repeat(auto-fit,minmax(300px,1fr));">
+      <!-- JS generates charts here -->
     </div>
-  </main>
+
+  </div>
 </div>
+
+<style>
+@keyframes spin {
+  0% { transform: rotate(0deg);}
+  100% { transform: rotate(360deg);}
+}
+</style>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>
-(function() {
+(function(){
   const POLL_INTERVAL_MS = 5000;
-  let chartInstances = [];
-  let pollTimer = null;
+  let chartInstances = [], pollTimer = null;
+  const nodeSelect = document.getElementById("node-select"),
+        chartsContainer = document.getElementById("charts-container"),
+        emptyState = document.getElementById("empty-state"),
+        loadingState = document.getElementById("loading-state"),
+        nodeStatusCard = document.getElementById("node-status-card"),
+        nodeInfoCard = document.getElementById("node-info-card"),
+        nodeStatusBadge = document.getElementById("node-status-badge"),
+        lastUpdateEl = document.getElementById("last-update");
 
-  const nodeSelect = document.getElementById("node-select");
-  const chartsContainer = document.getElementById("charts-container");
-  const emptyState = document.getElementById("empty-state");
-  const loadingState = document.getElementById("loading-state");
-  const nodeStatusEl = document.getElementById("node-status");
-  const lastUpdateEl = document.getElementById("last-update");
-
-  function showEmpty() {
-    chartsContainer.classList.add("hidden");
-    loadingState.classList.add("hidden");
-    emptyState.classList.remove("hidden");
+  function showEmpty(){
+    chartsContainer.style.display='none';
+    loadingState.style.display='none';
+    emptyState.style.display='block';
+    nodeStatusCard.style.display='none';
+    nodeInfoCard.style.display='none';
+  }
+  function showLoading(){
+    emptyState.style.display='none';
+    chartsContainer.style.display='none';
+    loadingState.style.display='block';
+  }
+  function showCharts(){
+    loadingState.style.display='none';
+    emptyState.style.display='none';
+    chartsContainer.style.display='grid';
+    nodeStatusCard.style.display='flex';
+    nodeInfoCard.style.display='flex';
   }
 
-  function showLoading() {
-    emptyState.classList.add("hidden");
-    chartsContainer.classList.add("hidden");
-    loadingState.classList.remove("hidden");
-  }
-
-  function showCharts() {
-    loadingState.classList.add("hidden");
-    emptyState.classList.add("hidden");
-    chartsContainer.classList.remove("hidden");
-  }
-
-  function setNodeStatus(node) {
-    if (!node) return;
+  function setNodeStatus(node){
+    if(!node) return;
     const status = node.status || "offline";
-    nodeStatusEl.textContent = status;
-    nodeStatusEl.className = "badge badge-lg " + (
-      status === "online" ? "badge-success" :
-      status === "maintenance" ? "badge-warning" : "badge-ghost"
-    );
+    const statusText = status==='online'?'🟢 En Línea':status==='offline'?'🔴 Fuera de Línea':'🟡 Mantenimiento';
+    nodeStatusBadge.textContent=statusText;
+    nodeStatusBadge.style.background=status==='online'?'#d1fae5':status==='offline'?'#fee2e2':'#fef3c7';
+    nodeStatusBadge.style.color=status==='online'?'#047857':status==='offline'?'#b91c1c':'#92400e';
+    nodeStatusBadge.style.padding='6px 12px';
+    nodeStatusBadge.style.borderRadius='12px';
+    nodeStatusBadge.style.fontWeight='600';
   }
 
-  function setLastUpdate() {
-    lastUpdateEl.textContent = "Última actualización: " + new Date().toLocaleTimeString("es");
+  function setLastUpdate(){
+    const now=new Date();
+    lastUpdateEl.textContent="Última actualización: "+now.toLocaleTimeString("es-ES");
   }
 
-  function destroyCharts() {
-    chartInstances.forEach(c => c.destroy());
-    chartInstances = [];
-  }
+  function destroyCharts(){ chartInstances.forEach(c=>c.destroy()); chartInstances=[]; }
 
-  function buildCharts(data) {
+  function buildCharts(data){
     destroyCharts();
-    chartsContainer.innerHTML = "";
-    const { node, sensors, readings } = data;
-    if (!sensors || sensors.length === 0) {
-      chartsContainer.innerHTML = "<p class=\"col-span-full text-center text-base-content/60\">No hay sensores en este nodo.</p>";
-      showCharts();
+    chartsContainer.innerHTML="";
+    const { node,sensors,readings } = data;
+    if(!sensors||sensors.length===0){ 
+      chartsContainer.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:40px;color:#888;">No hay sensores asociados a este nodo.</div>';
+      chartsContainer.style.display='grid';
       return;
     }
+    document.getElementById('sensor-count').textContent=sensors.length;
+    document.getElementById('reading-count').textContent=readings?readings.length:0;
 
-    const readingsBySensor = {};
-    sensors.forEach(s => { readingsBySensor[s.id] = []; });
-    (readings || []).forEach(r => {
-      const sid = r.sensor_id;
-      if (readingsBySensor[sid]) readingsBySensor[sid].push(r);
-    });
+    const readingsBySensor={};
+    sensors.forEach(s=>readingsBySensor[s.id]=[]);
+    (readings||[]).forEach(r=>{if(readingsBySensor[r.sensor_id]) readingsBySensor[r.sensor_id].push(r);});
 
-    sensors.forEach(s => {
-      const list = (readingsBySensor[s.id] || []).slice().reverse();
-      const labels = list.map(r => r.timestamp ? r.timestamp.replace("Z", "").slice(11, 19) : "");
-      const values = list.map(r => Number(r.value));
+    const sensorIcons={'temperature':'🌡️','humidity':'💧','co2':'🌫️','light':'💡','pressure':'🔋','soil_moisture':'🌱','air_quality':'💨','custom':'⚙️'};
+    const colors={'temperature':'rgb(239,68,68)','humidity':'rgb(59,130,246)','co2':'rgb(107,114,128)','light':'rgb(251,191,36)','pressure':'rgb(139,92,246)','soil_moisture':'rgb(34,197,94)','air_quality':'rgb(168,85,247)','custom':'rgb(59,130,246)'};
 
-      const canvas = document.createElement("canvas");
-      canvas.id = "chart-" + s.id;
-      canvas.height = 200;
-      const wrap = document.createElement("div");
-      wrap.className = "bg-base-100 rounded-lg shadow-md p-4";
+    sensors.forEach(s=>{
+      const list=(readingsBySensor[s.id]||[]).slice().reverse();
+      const labels=list.map(r=>r.timestamp?r.timestamp.replace("Z","").slice(11,19):"");
+      const values=list.map(r=>Number(r.value));
+
+      const canvas=document.createElement("canvas");
+      canvas.height=200;
+
+      const wrap=document.createElement("div");
+      wrap.style.cssText="background:white;border-radius:24px;box-shadow:0 25px 60px rgba(0,0,0,0.08);padding:24px;border:1px solid #cbd5e1;transition:0.3s;cursor:pointer;";
+      wrap.onmouseover=()=>wrap.style.transform="translateY(-4px)"; wrap.onmouseleave=()=>wrap.style.transform="translateY(0)";
+
+      const title=document.createElement("h3");
+      title.style.cssText="font-weight:700;font-size:16px;margin-bottom:12px;display:flex;align-items:center;gap:6px;color:black;"
+      title.innerHTML=(sensorIcons[s.type]||'📡')+' '+(s.type||"Sensor")+(s.unit?' ('+s.unit+')':'');
+      wrap.appendChild(title);
       wrap.appendChild(canvas);
       chartsContainer.appendChild(wrap);
 
-      const ctx = canvas.getContext("2d");
-      const unit = s.unit || "";
-      const chart = new Chart(ctx, {
-        type: "line",
-        data: {
-          labels,
-          datasets: [{
-            label: (s.type || "Sensor") + " " + (unit ? "(" + unit + ")" : ""),
-            data: values,
-            borderColor: "rgb(59, 130, 246)",
-            backgroundColor: "rgba(59, 130, 246, 0.1)",
-            fill: true,
-            tension: 0.2
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: true,
-          animation: false,
-          transitions: { active: { animation: { duration: 0 } } },
-          plugins: { legend: { display: true } },
-          scales: {
-            y: { beginAtZero: false }
-          }
-        }
-      });
+      const ctx=canvas.getContext("2d");
+      const color=colors[s.type]||'rgb(59,130,246)';
+      const bgColor=color.replace('rgb','rgba').replace(')',' ,0.1)');
+      const chart=new Chart(ctx,{type:"line",data:{labels,datasets:[{label:s.description||s.type,data:values,borderColor:color,backgroundColor:bgColor,fill:true,tension:0.3,borderWidth:2,pointRadius:3,pointHoverRadius:5,pointBackgroundColor:color}]} ,options:{responsive:true,plugins:{legend:{display:true}},scales:{y:{beginAtZero:false}}}});
       chartInstances.push(chart);
     });
+
     showCharts();
   }
 
-  async function loadNodes() {
-    try {
-      const res = await fetch("/api/nodes");
-      const nodes = await res.json();
-      nodeSelect.innerHTML = "<option value=\"\">Selecciona un nodo</option>" +
-        nodes.map(n => "<option value=\"" + n.id + "\">" + (n.name || "Nodo " + n.id) + "</option>").join("");
-      const initial = nodeSelect.getAttribute("data-initial-node-id");
-      if (initial) nodeSelect.value = initial;
-    } catch (e) {
-      console.error("Error loading nodes", e);
-    }
+  async function loadNodes(){
+    try{
+      const res=await fetch("/api/nodes");
+      const nodes=await res.json();
+      nodeSelect.innerHTML="<option value=''>-- Elige un nodo --</option>"+(Array.isArray(nodes)?nodes:[]).map(n=>`<option value="${n.id}">${n.name||'Nodo '+n.id} ${n.status==='online'?'🟢':n.status==='offline'?'🔴':'🟡'}</option>`).join("");
+    }catch(e){console.error("Error loading nodes", e);}
   }
 
-  async function fetchDashboard(nodeId) {
-    const res = await fetch("/api/dashboard?node_id=" + encodeURIComponent(nodeId));
-    if (!res.ok) throw new Error(res.statusText);
+  async function fetchDashboard(nodeId){
+    const res=await fetch("/api/dashboard?node_id="+encodeURIComponent(nodeId));
+    if(!res.ok) throw new Error(res.statusText);
     return res.json();
   }
 
-  async function onNodeChange() {
-    const nodeId = nodeSelect.value;
-    if (!nodeId) {
-      showEmpty();
-      destroyCharts();
-      if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
-      return;
-    }
+  async function onNodeChange(){
+    const nodeId=nodeSelect.value;
+    if(!nodeId){ showEmpty(); destroyCharts(); if(pollTimer){clearInterval(pollTimer); pollTimer=null;} return; }
     showLoading();
-    try {
-      const data = await fetchDashboard(nodeId);
+    try{
+      const data=await fetchDashboard(nodeId);
       setNodeStatus(data.node);
       setLastUpdate();
       buildCharts(data);
-      if (pollTimer) clearInterval(pollTimer);
-      pollTimer = setInterval(async () => {
-        if (!nodeSelect.value) return;
-        try {
-          const data = await fetchDashboard(nodeSelect.value);
-          setNodeStatus(data.node);
-          setLastUpdate();
-          buildCharts(data);
-        } catch (e) { console.error("Poll error", e); }
-      }, POLL_INTERVAL_MS);
-    } catch (e) {
-      console.error("Dashboard error", e);
-      showEmpty();
-    }
+      if(pollTimer) clearInterval(pollTimer);
+      pollTimer=setInterval(async ()=>{ try{ const data=await fetchDashboard(nodeSelect.value); setNodeStatus(data.node); setLastUpdate(); buildCharts(data);}catch(e){console.error(e);} }, POLL_INTERVAL_MS);
+    }catch(e){console.error("Dashboard error", e); showEmpty();}
   }
 
   nodeSelect.addEventListener("change", onNodeChange);
-  loadNodes().then(() => {
-    if (nodeSelect.value) onNodeChange();
-    else showEmpty();
-  });
+  loadNodes().then(()=>{ if(nodeSelect.value) onNodeChange(); else showEmpty(); });
+
 })();
 </script>

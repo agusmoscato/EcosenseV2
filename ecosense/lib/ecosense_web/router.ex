@@ -20,6 +20,11 @@ defmodule EcosenseWeb.Router do
     get "/", PageController, :home
     get "/dashboard", DashboardController, :index
     get "/dashboard/:node_id", DashboardController, :show
+    
+    # Management Pages
+    get "/manage", ManagementController, :index
+    get "/manage/nodes", ManagementController, :nodes
+    get "/manage/sensors", ManagementController, :sensors
   end
 
   scope "/api", EcosenseWeb do
