@@ -102,15 +102,147 @@
 </style>
 
 <div style="font-family: Inter, -apple-system, BlinkMacSystemFont, sans-serif; min-height:100vh; background:#f5f7fa;">
-  <div style="backdrop-filter: blur(20px); background: rgba(255,255,255,0.85); padding:18px 40px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(0,0,0,0.05); position:sticky; top:0; z-index:100;">
+  <!-- NAVBAR UNIFICADA -->
+  <div style="
+  backdrop-filter: blur(20px);
+  background: rgba(255,255,255,0.85);
+  padding:18px 40px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  border-bottom:1px solid rgba(0,0,0,0.05);
+  position:sticky;
+  top:0;
+  z-index:100;
+">
+    <!-- Logo -->
     <a href={~p"/"} style="display:flex; align-items:center; gap:12px; text-decoration:none;">
-      <img src={~p"/images/ecosenselogo.png"} alt="Ecosense" style="height:40px;" />
+      <img
+        src={~p"/images/ecosenselogo.png"}
+        alt="Ecosense"
+        style="height:40px;"
+      />
     </a>
-    <div style="display:flex; gap:20px; align-items:center;">
-      <a href={~p"/"} style="text-decoration:none; font-weight:600; color:#1f3c88; padding:6px 14px; border-radius:12px; background:#e0e7ff;">🏠 Home</a>
-      <a href={~p"/dashboard"} style="text-decoration:none; font-weight:600; color:#1f3c88; padding:6px 14px; border-radius:12px; background:#e0e7ff;">📊 Dashboard</a>
-      <a href={~p"/manage"} style="text-decoration:none; font-weight:600; color:#1f3c88; padding:6px 14px; border-radius:12px; background:#e0e7ff;">📡 Gestión</a>
-      <span style="font-size:12px; color:#777;">v1.0</span>
+    <div class="flex items-center gap-4">
+      <span style="font-size: 12px; color: var(--ecosense-secondary); opacity: 0.7;">v1.0</span>
+
+      <!-- CTA a dashboard -->
+      <a
+        href={~p"/dashboard"}
+        style="
+          background: var(--ecosense-tertiary);
+          color: var(--ecosense-secondary);
+          padding: 8px 18px;
+          border-radius: 999px;
+          font-weight: 600;
+          text-decoration: none;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+        "
+      >
+        <span class="material-symbols-outlined" style="font-size: 20px;">monitoring</span>
+        Dashboards
+      </a>
+
+      <!-- Menú de procesos (ruedita) -->
+      <div class="relative" style="position: relative;" id="settings-dropdown-container">
+        <button
+          type="button"
+          id="settings-button"
+          class="flex items-center justify-center"
+          style="
+            width: 36px;
+            height: 36px;
+            border-radius: 999px;
+            border: 1px solid rgba(30,81,89,0.16);
+            background: rgba(255,255,255,0.7);
+            color: var(--ecosense-secondary);
+            cursor: pointer;
+          "
+        >
+          <span class="material-symbols-outlined" style="font-size: 22px;">settings</span>
+        </button>
+
+        <!-- Dropdown -->
+        <div
+          id="settings-dropdown"
+          style="
+            display: none;
+            position: absolute;
+            right: 0;
+            margin-top: 8px;
+            background: white;
+            color: var(--ecosense-secondary);
+            border-radius: 12px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.25);
+            padding: 8px 0;
+            min-width: 220px;
+            z-index: 1000;
+          "
+        >
+          <a
+            href={~p"/manage/nodes"}
+            style="
+              display: flex;
+              align-items: center;
+              gap: 8px;
+              padding: 8px 16px;
+              text-decoration: none;
+              color: inherit;
+              font-size: 14px;
+            "
+            onmouseover="this.style.backgroundColor='rgba(118,192,221,0.15)';"
+            onmouseout="this.style.backgroundColor='transparent';"
+          >
+            <span class="material-symbols-outlined" style="font-size: 20px;">hub</span>
+            Configurar nodos
+          </a>
+
+          <a
+            href={~p"/manage/sensors"}
+            style="
+              display: flex;
+              align-items: center;
+              gap: 8px;
+              padding: 8px 16px;
+              text-decoration: none;
+              color: inherit;
+              font-size: 14px;
+            "
+            onmouseover="this.style.backgroundColor='rgba(118,192,221,0.15)';"
+            onmouseout="this.style.backgroundColor='transparent';"
+          >
+            <span class="material-symbols-outlined" style="font-size: 20px;">sensors</span>
+            Configurar sensores
+          </a>
+
+          <form action={~p"/logout"} method="post" style="margin: 0;">
+            <input type="hidden" name="_csrf_token" value={get_csrf_token()} />
+            <input type="hidden" name="_method" value="delete" />
+            <button
+              type="submit"
+              style="
+                width: 100%;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 8px 16px;
+                background: transparent;
+                border: none;
+                cursor: pointer;
+                font-size: 14px;
+                color: inherit;
+              "
+              onmouseover="this.style.backgroundColor='rgba(232,38,89,0.1)';"
+              onmouseout="this.style.backgroundColor='transparent';"
+            >
+              <span class="material-symbols-outlined" style="font-size: 20px; color: var(--ecosense-negative);">logout</span>
+              Cerrar sesión
+            </button>
+          </form>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -322,6 +454,42 @@
       }
     });
   });
+
+  // Manejo del dropdown de configuraciones
+  (function () {
+    const settingsButton = document.getElementById("settings-button");
+    const settingsDropdown = document.getElementById("settings-dropdown");
+    const settingsContainer = document.getElementById("settings-dropdown-container");
+
+    if (!settingsButton || !settingsDropdown) return;
+
+    function toggleDropdown() {
+      const isVisible = settingsDropdown.style.display === "block";
+      settingsDropdown.style.display = isVisible ? "none" : "block";
+    }
+
+    function closeDropdown() {
+      settingsDropdown.style.display = "none";
+    }
+
+    // Toggle al hacer click en el botón
+    settingsButton.addEventListener("click", function (e) {
+      e.stopPropagation();
+      toggleDropdown();
+    });
+
+    // Cerrar al hacer click fuera del dropdown
+    document.addEventListener("click", function (e) {
+      if (settingsContainer && !settingsContainer.contains(e.target)) {
+        closeDropdown();
+      }
+    });
+
+    // Prevenir que el click dentro del dropdown lo cierre
+    settingsDropdown.addEventListener("click", function (e) {
+      e.stopPropagation();
+    });
+  })();
 
   window.editSensor = function(id) {
     const sensor = allSensors.find(s => s.id == id);
