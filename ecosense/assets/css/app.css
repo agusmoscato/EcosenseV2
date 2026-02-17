@@ -163,6 +163,30 @@
   box-shadow: 0 25px 50px rgba(30, 81, 89, 0.2);
 }
 
+/* Logo hero animado: del centro al navbar al hacer scroll */
+.ecosense-hero-logo-wrapper {
+  position: absolute;
+  left: 50%;
+  top: 120px;
+  transform: translate(-50%, -50%) scale(2.5);
+  transition: transform 800ms ease-out, top 800ms ease-out, left 800ms ease-out;
+  pointer-events: none;
+}
+
+.ecosense-hero-logo-img {
+  width: 200px;
+  height: auto;
+  border-radius: 16px;
+}
+
+.ecosense-hero-logo-stuck {
+  position: fixed !important;
+  top: -5px;
+  left: 36px;
+  transform: translate(0, 0) scale(0.7);
+  z-index: 150;
+}
+
 /* Google Material Symbols */
 .material-symbols-outlined {
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
