@@ -133,7 +133,7 @@
             <th style="padding:16px; text-align:left; font-weight:600; color:#1f3c88;">Nodo</th>
             <th style="padding:16px; text-align:left; font-weight:600; color:#1f3c88;">Unidad</th>
             <th style="padding:16px; text-align:left; font-weight:600; color:#1f3c88;">Descripción</th>
-            <th style="padding:16px; text-align:left; font-weight:600; color:#1f3c88;">Acciones</th>
+            <th style="padding:16px; text-align:left; font-weight:600; color:#1f3c88;"></th>
           </tr>
         </thead>
         <tbody id="sensors-tbody">
@@ -314,6 +314,11 @@
         document.getElementById('create-sensor-form').reset();
         createModal.close();
         loadSensors();
+        const alert = document.createElement('div');
+        alert.style.cssText = "position:fixed;bottom:20px;right:20px;padding:12px 20px;background:#2e7d32;color:white;border-radius:14px;box-shadow:0 12px 30px rgba(0,0,0,0.2);font-weight:600;";
+        alert.textContent = "Sensor actualizado exitosamente";
+        document.body.appendChild(alert);
+        setTimeout(()=>alert.remove(),3000);
       }
     });
   });

@@ -242,7 +242,7 @@ dialog::backdrop {
               </th>
               
               <th style="padding:16px; text-align:left; font-weight:600; color:#1f3c88;">
-                Acciones
+                
               </th>
             </tr>
           </thead>
@@ -482,7 +482,8 @@ dialog::backdrop {
           </td>
           <td style="padding:12px;"><span style="padding:4px 8px; border-radius:12px; border:1px solid #ccc;">${n.sensor_count || 0}</span></td>
           <td style="padding:12px; display:flex; gap:6px;">
-            <button onclick="editNode(${n.id})" style="padding:6px 12px; border-radius:12px; border:none; background:#e0e7ff; color:#1f3c88; font-weight:600; cursor:pointer;"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="black"><path d="M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Zm640-584-56-56 56 56Zm-141 85-28-29 57 57-29-28Z"/></svg></button>
+            <button onclick="editNode(${n.id})" style="padding:6px 12px; border-radius:12px; border:none; background:#e0e7ff; color:#1f3c88; font-weight:600; cursor:pointer;" title="Editar nodo"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="black"><path d="M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Zm640-584-56-56 56 56Zm-141 85-28-29 57 57-29-28Z"/></svg></button>
+            <button onclick="copyApiKey('${n.api_key || ''}')" style="padding:6px 12px; border-radius:12px; border:none; background:#f0fdf4; color:#166534; font-weight:600; cursor:pointer;" title="Copiar API Key"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M360-240q-33 0-56.5-23.5T280-320v-480q0-33 23.5-56.5T360-880h400q33 0 56.5 23.5T840-800v480q0 33-23.5 56.5T760-240H360Zm0-80h400v-480H360v480ZM200-80q-33 0-56.5-23.5T120-160v-560h80v560h440v80H200Zm160-240v-480 480Z"/></svg></button>
           </td>
         </tr>
       `).join('');
@@ -517,7 +518,7 @@ dialog::backdrop {
         loadNodes();
         const alert = document.createElement('div');
         alert.style.cssText = "position:fixed;bottom:20px;right:20px;padding:12px 20px;background:#2e7d32;color:white;border-radius:14px;box-shadow:0 12px 30px rgba(0,0,0,0.2);font-weight:600;";
-        alert.textContent = "✅ Nodo creado exitosamente";
+        alert.textContent = "Nodo creado exitosamente";
         document.body.appendChild(alert);
         setTimeout(()=>alert.remove(),3000);
       }else{
@@ -598,13 +599,54 @@ dialog::backdrop {
         const alert = document.createElement("div");
         alert.style.cssText =
           "position:fixed;bottom:20px;right:20px;padding:12px 20px;background:#2563eb;color:white;border-radius:14px;font-weight:600;";
-        alert.textContent = "✏️ Nodo actualizado correctamente";
+        alert.textContent = "Nodo actualizado correctamente";
         document.body.appendChild(alert);
         setTimeout(() => alert.remove(), 3000);
       } else {
         alert("Error al actualizar el nodo");
       }
     });
+
+  // Función para copiar API key al portapapeles
+  async function copyApiKey(apiKey) {
+    if (!apiKey || apiKey.trim() === '') {
+      alert('Este nodo no tiene API key');
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(apiKey);
+      
+      // Mostrar notificación de éxito
+      const alert = document.createElement('div');
+      alert.style.cssText =
+        'position:fixed;bottom:20px;right:20px;padding:12px 20px;background:#2e7d32;color:white;border-radius:14px;box-shadow:0 12px 30px rgba(0,0,0,0.2);font-weight:600;z-index:10000;';
+      alert.textContent = '✅ API Key copiada al portapapeles';
+      document.body.appendChild(alert);
+      setTimeout(() => alert.remove(), 3000);
+    } catch (err) {
+      console.error('Error al copiar:', err);
+      // Fallback para navegadores antiguos
+      const textArea = document.createElement('textarea');
+      textArea.value = apiKey;
+      textArea.style.position = 'fixed';
+      textArea.style.opacity = '0';
+      document.body.appendChild(textArea);
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        const alert = document.createElement('div');
+        alert.style.cssText =
+          'position:fixed;bottom:20px;right:20px;padding:12px 20px;background:#2e7d32;color:white;border-radius:14px;box-shadow:0 12px 30px rgba(0,0,0,0.2);font-weight:600;z-index:10000;';
+        alert.textContent = '✅ API Key copiada al portapapeles';
+        document.body.appendChild(alert);
+        setTimeout(() => alert.remove(), 3000);
+      } catch (fallbackErr) {
+        alert('Error al copiar el API key. Por favor, cópialo manualmente.');
+      }
+      document.body.removeChild(textArea);
+    }
+  }
 
   // Load nodes initially
   loadNodes();
