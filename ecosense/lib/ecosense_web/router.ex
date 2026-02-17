@@ -19,14 +19,27 @@ defmodule EcosenseWeb.Router do
     plug EcosenseWeb.DeviceAuthPlug
   end
 
+  pipeline :require_auth do
+    plug EcosenseWeb.AuthPlug
+  end
+
+  # Login (sin autenticación)
   scope "/", EcosenseWeb do
     pipe_through :browser
+
+    get "/login", SessionController, :new
+    post "/login", SessionController, :create
+    delete "/logout", SessionController, :delete
+  end
+
+  # Rutas protegidas (requieren login)
+  scope "/", EcosenseWeb do
+    pipe_through [:browser, :require_auth]
 
     get "/", PageController, :home
     get "/dashboard", DashboardController, :index
     get "/dashboard/:node_id", DashboardController, :show
-    
-    # Management Pages
+
     get "/manage", ManagementController, :index
     get "/manage/nodes", ManagementController, :nodes
     get "/manage/sensors", ManagementController, :sensors

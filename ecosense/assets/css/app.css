@@ -102,4 +102,71 @@
 /* Make LiveView wrapper divs transparent for layout */
 [data-phx-session], [data-phx-teleported-src] { display: contents }
 
+/* ============================================
+   ECOSENSE - Paleta de colores (regla 60-30-10)
+   https://fonts.google.com/icons para iconos
+   ============================================ */
+
+:root {
+  /* Principal 60% */
+  --ecosense-primary: #76c0dd;
+  --ecosense-primary-dark: #5aa8c7;
+  --ecosense-primary-light: #9dd4ed;
+
+  /* Secundario 30% */
+  --ecosense-secondary: #1e5159;
+  --ecosense-secondary-dark: #153d44;
+  --ecosense-secondary-light: #2a6b75;
+
+  /* Terciario 10% */
+  --ecosense-tertiary: #b5e282;
+  --ecosense-tertiary-dark: #9bc96a;
+  --ecosense-tertiary-light: #cceba8;
+
+  /* Mensajes */
+  --ecosense-negative: #e82659;
+  --ecosense-positive: #11b657;
+  --ecosense-alert: #faca2a;
+  --ecosense-info: #018efe;
+}
+
+/* Clases de utilidad Ecosense */
+.ecosense-primary { color: var(--ecosense-primary); }
+.ecosense-secondary { color: var(--ecosense-secondary); }
+.ecosense-tertiary { color: var(--ecosense-tertiary); }
+.ecosense-negative { color: var(--ecosense-negative); }
+.ecosense-positive { color: var(--ecosense-positive); }
+.ecosense-alert { color: var(--ecosense-alert); }
+.ecosense-info { color: var(--ecosense-info); }
+
+.ecosense-bg-primary { background-color: var(--ecosense-primary); }
+.ecosense-bg-secondary { background-color: var(--ecosense-secondary); }
+.ecosense-bg-tertiary { background-color: var(--ecosense-tertiary); }
+
+.ecosense-btn-primary {
+  background-color: var(--ecosense-primary);
+  color: var(--ecosense-secondary);
+  border: none;
+}
+.ecosense-btn-primary:hover {
+  background-color: var(--ecosense-primary-dark);
+  color: white;
+}
+
+.ecosense-login-bg {
+  background: linear-gradient(135deg, var(--ecosense-primary) 0%, var(--ecosense-secondary) 100%);
+}
+
+.ecosense-login-card {
+  background: rgb(255, 255, 255);
+  border-radius: 1rem;
+  box-shadow: 0 25px 50px rgba(30, 81, 89, 0.2);
+}
+
+/* Google Material Symbols */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  vertical-align: middle;
+}
+
 /* This file is for your main application CSS */

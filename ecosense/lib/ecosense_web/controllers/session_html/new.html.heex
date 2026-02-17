@@ -1,0 +1,43 @@
+<div class="p-8">
+  <div class="text-center mb-8">
+    <img src={~p"/images/ecosenselogo.png"} alt="Ecosense" class="h-50 mx-auto mb-4 ecosense-logo" />
+    <h1 class="text-2xl font-bold ecosense-secondary">Bienvenido!</h1>
+    <p class="text-sm ecosense-secondary mt-1">Plataforma de monitoreo ambiental</p>
+  </div>
+
+  <.form
+    for={%{}}
+    action={~p"/login"}
+    method="post"
+    class="space-y-4"
+  >
+    <div>
+      <label class="block text-sm font-medium mb-2 ecosense-secondary">Usuario</label>
+      <input
+        type="text"
+        name="user[username]"
+        required
+        placeholder="admin"
+        class="input input-bordered w-full"
+        autocomplete="username"
+      />
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium mb-2 ecosense-secondary">Contraseña</label>
+      <input
+        type="password"
+        name="user[password]"
+        required
+        placeholder="••••••••"
+        class="input input-bordered w-full"
+        autocomplete="current-password"
+      />
+    </div>
+
+    <button type="submit" class="btn w-full ecosense-btn-primary">
+      <span class="material-symbols-outlined text-xl mr-2">login</span>
+      Iniciar sesión
+    </button>
+  </.form>
+</div>
