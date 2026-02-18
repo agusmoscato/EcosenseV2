@@ -126,6 +126,10 @@ html { scroll-behavior: smooth; }
   --ecosense-tertiary-dark: #9bc96a;
   --ecosense-tertiary-light: #cceba8;
 
+  /* Tonos suaves (fondos, navbar, hero) - clarito/blanquito para que el logo se vea */
+  --ecosense-primary-soft-1: #fcfdfd;
+  --ecosense-primary-soft-2: #f5f8fa;
+
   /* Mensajes */
   --ecosense-negative: #e82659;
   --ecosense-positive: #11b657;
