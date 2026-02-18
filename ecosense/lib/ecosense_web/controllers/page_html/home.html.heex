@@ -352,6 +352,38 @@ Cada registro es validado antes de almacenarse, garantizando información confia
   </div>
 </section>
 
+  <!-- Indicadores -->
+  <section id="indicators-section" style="
+    padding: 72px 40px;
+    background: linear-gradient(135deg, #faf8f5 0%, #f0ede9 100%);
+    color: var(--ecosense-secondary);
+  ">
+    <div style="
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 40px;
+      max-width: 1200px;
+      margin: auto;
+      text-align: center;
+    ">
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+        <span class="material-symbols-outlined" style="font-size: 40px; color: var(--ecosense-primary);">hub</span>
+        <div style="font-size: 32px; font-weight: 700; color: var(--ecosense-secondary);" id="home-node-count">-</div>
+        <div style="font-size: 15px; color: var(--ecosense-secondary); opacity: 0.85;">Nodos en el sistema</div>
+      </div>
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+        <span class="material-symbols-outlined" style="font-size: 40px; color: var(--ecosense-primary);">sensors</span>
+        <div style="font-size: 32px; font-weight: 700; color: var(--ecosense-secondary);" id="home-sensor-count">-</div>
+        <div style="font-size: 15px; color: var(--ecosense-secondary); opacity: 0.85;">Sensores en el sistema</div>
+      </div>
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+        <span class="material-symbols-outlined" style="font-size: 40px; color: var(--ecosense-primary);">database</span>
+        <div style="font-size: 32px; font-weight: 700; color: var(--ecosense-secondary);" id="home-reading-count">-</div>
+        <div style="font-size: 15px; color: var(--ecosense-secondary); opacity: 0.85;">Datos recolectados</div>
+      </div>
+    </div>
+  </section>
+
   <section style="
     padding: 100px 40px;
     background: linear-gradient(135deg, var(--ecosense-secondary) 0%, var(--ecosense-primary) 100%);
@@ -474,5 +506,104 @@ A partir de la elección del paradigma funcional, el objetivo fue diseñar un si
     settingsDropdown.addEventListener("click", function (e) {
       e.stopPropagation();
     });
+  })();
+
+  // Indicadores: nodos, sensores, registros con animación contador
+  (function () {
+    function formatReadings(n) {
+      if (n >= 1000000) return "+" + (n / 1000000).toFixed(1).replace(".0", "") + " millones";
+      if (n >= 1000) return "+" + (n / 1000).toFixed(n >= 10000 ? 0 : 1).replace(".0", "") + " mil";
+      return n.toString();
+    }
+
+    function easeOutQuart(t) {
+      return 1 - Math.pow(1 - t, 4);
+    }
+
+    function animateCounter(el, target, formatter, duration) {
+      const start = 0;
+      const startTime = performance.now();
+      formatter = formatter || (n => n.toString());
+
+      function update(now) {
+        const elapsed = now - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const eased = easeOutQuart(progress);
+        const current = Math.floor(start + (target - start) * eased);
+        el.textContent = formatter(current);
+        if (progress < 1) requestAnimationFrame(update);
+      }
+
+      requestAnimationFrame(update);
+    }
+
+    function runAnimations(nodeCount, sensorCount, readingCount) {
+      const nodeEl = document.getElementById("home-node-count");
+      const sensorEl = document.getElementById("home-sensor-count");
+      const readingEl = document.getElementById("home-reading-count");
+
+      const duration = 1200;
+
+      if (nodeEl) animateCounter(nodeEl, nodeCount, null, duration);
+      if (sensorEl) animateCounter(sensorEl, sensorCount, null, duration);
+      if (readingEl) animateCounter(readingEl, readingCount, formatReadings, duration);
+    }
+
+    async function loadIndicators() {
+      try {
+        const res = await fetch("/api/stats");
+        const data = await res.json();
+
+        const nodeCount = data.nodes ?? 0;
+        const sensorCount = data.sensors ?? 0;
+        const readingCount = data.readings ?? 0;
+
+        const section = document.getElementById("indicators-section");
+        const nodeEl = document.getElementById("home-node-count");
+        const sensorEl = document.getElementById("home-sensor-count");
+        const readingEl = document.getElementById("home-reading-count");
+
+        if (!section || (!nodeEl && !sensorEl && !readingEl)) return;
+
+        let animated = false;
+
+        function maybeAnimate() {
+          if (animated) return;
+          const rect = section.getBoundingClientRect();
+          const inView = rect.top < window.innerHeight && rect.bottom > 0;
+          if (inView) {
+            animated = true;
+            runAnimations(nodeCount, sensorCount, readingCount);
+          }
+        }
+
+        if ("IntersectionObserver" in window) {
+          const observer = new IntersectionObserver(
+            function (entries) {
+              entries.forEach(function (entry) {
+                if (entry.isIntersecting && !animated) {
+                  animated = true;
+                  runAnimations(nodeCount, sensorCount, readingCount);
+                }
+              });
+            },
+            { threshold: 0.2, rootMargin: "0px" }
+          );
+          observer.observe(section);
+        } else {
+          maybeAnimate();
+          window.addEventListener("scroll", maybeAnimate);
+          maybeAnimate();
+        }
+      } catch (e) {
+        console.error("Error cargando indicadores:", e);
+      }
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", loadIndicators);
+    } else {
+      loadIndicators();
+    }
   })();
 </script>
